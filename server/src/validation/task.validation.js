@@ -63,6 +63,10 @@ export const getTasksQuerySchema = z.object({
     .default("dueDate"),
   sortOrder: z.enum(["asc", "desc"]).optional().default("asc"),
   priority: z.enum(["P1", "P2", "P3", "P4"]).optional(),
+
+  // 🔄 UPDATED: Changed from z.string() to a more specific z.enum()
+  status: z.enum(["all", "todo", "in-progress", "completed"]).optional(),
+
   page: z.coerce
     .number()
     .min(1, "Page must be greater than 0")

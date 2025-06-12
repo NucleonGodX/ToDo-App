@@ -1,25 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Plus,
-  LogOut,
-  User,
-  FileText,
-  Search,
-  Filter,
-  Upload,
-} from "lucide-react";
+import { Plus, LogOut, FileText, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input"; // Kept in case you want to re-add search
 import { useAuthStore } from "@/store/authStore";
 import { useTaskStore } from "@/store/taskStore";
 import { taskService } from "@/services/taskService";
@@ -30,22 +16,21 @@ import ParseTextDialog from "@/components/ParseTextDialog";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
+
+  // --- STATE MANAGEMENT ---
+  // All dynamic data and filters are pulled from the central task store.
   const {
     tasks = [],
     isLoading = false,
-    filters = {
-      priority: "all",
-      search: "",
-      sortBy: "createdAt",
-      sortOrder: "desc",
-    },
-    pagination = { currentPage: 1, limit: 10, totalTasks: 0, totalPages: 0 },
+    filters = {},
+    pagination = {},
     setTasks,
     setLoading,
     setFilters,
     setPagination,
   } = useTaskStore();
 
+  // Local state for controlling dialog visibility
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showParseDialog, setShowParseDialog] = useState(false);
   const [stats, setStats] = useState({
@@ -54,21 +39,24 @@ export default function Dashboard() {
     status: { todo: 0, "in-progress": 0, completed: 0 },
   });
 
+  // --- DATA FETCHING ---
+  // This effect re-runs whenever the filters or page number change.
   useEffect(() => {
     loadTasks();
     loadStats();
-  }, [filters?.priority, filters?.search, pagination?.currentPage]);
+  }, [filters?.priority, filters?.status, pagination?.currentPage]);
 
+  // Fetches the aggregate stats for the top cards
   const loadStats = async () => {
     try {
       const response = await taskService.getTaskStats();
-      console.log("Stats loaded:", response.data); // Debug log
       setStats(response.data);
     } catch (error) {
       console.error("Failed to load stats:", error);
     }
   };
 
+  // Fetches the paginated and filtered list of tasks
   const loadTasks = async () => {
     setLoading(true);
     try {
@@ -79,8 +67,12 @@ export default function Dashboard() {
         sortOrder: filters?.sortOrder || "desc",
       };
 
+      // Add filters to the API request if they are not 'all'
       if (filters?.priority && filters.priority !== "all") {
         params.priority = filters.priority;
+      }
+      if (filters?.status && filters.status !== "all") {
+        params.status = filters.status;
       }
       if (filters?.search) {
         params.search = filters.search;
@@ -96,61 +88,100 @@ export default function Dashboard() {
     }
   };
 
-  console.log("stats:", stats); // Debug log for stats
-
+  // --- EVENT HANDLERS ---
   const handleLogout = () => {
     clearAuth();
     navigate("/");
-  };
-
-  const handleSearch = (e) => {
-    const value = e.target.value;
-    setFilters({ ...filters, search: value });
-    setPagination({ ...pagination, currentPage: 1 }); // Reset to first page when searching
-  };
-
-  const handlePriorityFilter = (priority) => {
-    setFilters({ ...filters, priority });
-    setPagination({ ...pagination, currentPage: 1 }); // Reset to first page when filtering
   };
 
   const handlePageChange = (page) => {
     setPagination({ ...pagination, currentPage: page });
   };
 
+  // Note: The search handler is here if you wish to add the search bar back.
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setFilters({ ...filters, search: value });
+    setPagination({ ...pagination, currentPage: 1 });
+  };
+
+  // Handler for Priority Filter. Sets the priority and resets to page 1.
+  const handlePriorityFilter = (priority) => {
+    setFilters({ ...filters, priority });
+    setPagination({ ...pagination, currentPage: 1 });
+  };
+
+  // Handler for Status Filter. Sets the status and resets to page 1.
+  const handleStatusFilter = (status) => {
+    setFilters({ ...filters, status });
+    setPagination({ ...pagination, currentPage: 1 });
+  };
+
+  // --- STYLE HELPERS ---
+  // These functions keep the JSX clean by handling styling logic.
+
+  // Returns the correct CSS classes for a priority button based on the active filter.
+  const getPriorityButtonStyle = (priority, baseStyle, activeStyle) => {
+    return filters.priority === priority ? activeStyle : baseStyle;
+  };
+
+  // Returns the correct CSS classes for a status button based on the active filter.
+  const getStatusButtonStyle = (status) => {
+    if (filters.status === status) {
+      // Active styles
+      switch (status) {
+        case "in-progress":
+          return "bg-white text-amber-600 shadow-sm";
+        case "completed":
+          return "bg-white text-green-600 shadow-sm";
+        default:
+          return "bg-white text-slate-800 shadow-sm";
+      }
+    } else {
+      // Inactive styles
+      switch (status) {
+        case "in-progress":
+          return "text-amber-600 hover:bg-white/50";
+        case "completed":
+          return "text-green-600 hover:bg-white/50";
+        default:
+          return "text-slate-600 hover:bg-white/50";
+      }
+    }
+  };
+
+  // --- RENDER ---
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sage via-sage/90 to-sage/80">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-teal/20 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-white/70 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <div className="p-2 bg-teal/10 rounded-lg">
-                <FileText className="h-6 w-6 text-teal" />
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <FileText className="h-6 w-6 text-indigo-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-midnight-blue">
+                <h1 className="text-lg font-bold text-slate-800">
                   Task Dashboard
                 </h1>
-                <p className="text-sm text-midnight-blue/70">
+                <p className="text-sm text-slate-500">
                   Welcome back, {user?.name}
                 </p>
               </div>
             </div>
-
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowParseDialog(true)}
-                className="border-teal/30 text-teal hover:bg-teal/10"
+                className="text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-slate-900"
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Parse Text
               </Button>
               <Button
                 onClick={() => setShowCreateDialog(true)}
-                className="bg-teal hover:bg-teal/90 text-white"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
                 size="sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -158,154 +189,164 @@ export default function Dashboard() {
               </Button>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={handleLogout}
-                className="text-midnight-blue hover:text-burgundy"
+                className="text-slate-500 hover:bg-slate-200 rounded-full"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-5 w-5" />
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-teal/20">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Statistics Cards Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-midnight-blue/70">
+              <CardTitle className="text-sm font-medium text-slate-500">
                 Total Tasks
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-midnight-blue">
+              <div className="text-3xl font-bold text-slate-800">
                 {stats.total}
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-teal/20">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-midnight-blue/70">
+              <CardTitle className="text-sm font-medium text-slate-500">
                 High Priority
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-burgundy">
+              <div className="text-3xl font-bold text-red-500">
                 {stats.priority.P1}
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-teal/20">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-midnight-blue/70">
+              <CardTitle className="text-sm font-medium text-slate-500">
                 In Progress
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-teal">
+              <div className="text-3xl font-bold text-amber-500">
                 {stats.status["in-progress"]}
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-teal/20">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-midnight-blue/70">
+              <CardTitle className="text-sm font-medium text-slate-500">
                 Completed
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-3xl font-bold text-green-500">
                 {stats.status.completed}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters and Search */}
-        <Card className="mb-6 border-teal/20">
-          <CardHeader>
-            <CardTitle className="text-midnight-blue">
-              Task Management
-            </CardTitle>
-            <CardDescription>
-              Manage and organize your tasks efficiently
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-midnight-blue/50" />
-                <Input
-                  placeholder="Search tasks..."
-                  value={filters.search}
-                  onChange={handleSearch}
-                  className="pl-10 border-teal/30 focus:border-teal"
-                />
-              </div>
-
-              <div className="flex gap-2">
+        {/* Filters Section */}
+        <Card className="mb-6 bg-white border-slate-200 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+              {/* Status Filter Controls */}
+              <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200">
                 <Button
-                  variant={filters.priority === "all" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handlePriorityFilter("all")}
-                  className={
-                    filters.priority === "all"
-                      ? "bg-teal"
-                      : "border-teal/30 text-teal"
-                  }
+                  variant="ghost"
+                  onClick={() => handleStatusFilter("all")}
+                  className={`w-full ${getStatusButtonStyle("all")}`}
                 >
                   All
                 </Button>
                 <Button
-                  variant={filters.priority === "P1" ? "default" : "outline"}
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleStatusFilter("todo")}
+                  className={`w-full ${getStatusButtonStyle("todo")}`}
+                >
+                  To Do
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleStatusFilter("in-progress")}
+                  className={`w-full ${getStatusButtonStyle("in-progress")}`}
+                >
+                  In Progress
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleStatusFilter("completed")}
+                  className={`w-full ${getStatusButtonStyle("completed")}`}
+                >
+                  Completed
+                </Button>
+              </div>
+
+              {/* Priority Filter Controls */}
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => handlePriorityFilter("all")}
+                  className={getPriorityButtonStyle(
+                    "all",
+                    "bg-white text-slate-700 border border-slate-300 hover:bg-slate-100",
+                    "bg-indigo-600 text-white hover:bg-indigo-700"
+                  )}
+                >
+                  All
+                </Button>
+                <Button
                   size="sm"
                   onClick={() => handlePriorityFilter("P1")}
-                  className={
-                    filters.priority === "P1"
-                      ? "bg-burgundy"
-                      : "border-burgundy/30 text-burgundy"
-                  }
+                  className={getPriorityButtonStyle(
+                    "P1",
+                    "bg-white text-red-600 border border-red-200 hover:bg-red-50",
+                    "bg-red-500 text-white hover:bg-red-600"
+                  )}
                 >
                   P1
                 </Button>
                 <Button
-                  variant={filters.priority === "P2" ? "default" : "outline"}
                   size="sm"
                   onClick={() => handlePriorityFilter("P2")}
-                  className={
-                    filters.priority === "P2"
-                      ? "bg-orange-500"
-                      : "border-orange-300 text-orange-600"
-                  }
+                  className={getPriorityButtonStyle(
+                    "P2",
+                    "bg-white text-orange-600 border border-orange-200 hover:bg-orange-50",
+                    "bg-orange-500 text-white hover:bg-orange-600"
+                  )}
                 >
                   P2
                 </Button>
                 <Button
-                  variant={filters.priority === "P3" ? "default" : "outline"}
                   size="sm"
                   onClick={() => handlePriorityFilter("P3")}
-                  className={
-                    filters.priority === "P3"
-                      ? "bg-yellow-500"
-                      : "border-yellow-300 text-yellow-600"
-                  }
+                  className={getPriorityButtonStyle(
+                    "P3",
+                    "bg-white text-amber-600 border border-amber-200 hover:bg-amber-50",
+                    "bg-amber-500 text-white hover:bg-amber-600"
+                  )}
                 >
                   P3
                 </Button>
                 <Button
-                  variant={filters.priority === "P4" ? "default" : "outline"}
                   size="sm"
                   onClick={() => handlePriorityFilter("P4")}
-                  className={
-                    filters.priority === "P4"
-                      ? "bg-green-500"
-                      : "border-green-300 text-green-600"
-                  }
+                  className={getPriorityButtonStyle(
+                    "P4",
+                    "bg-white text-blue-600 border border-blue-200 hover:bg-blue-50",
+                    "bg-blue-500 text-white hover:bg-blue-600"
+                  )}
                 >
                   P4
                 </Button>
@@ -314,7 +355,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Task List */}
+        {/* Task List Component */}
         <TaskList
           tasks={tasks}
           isLoading={isLoading}
@@ -327,7 +368,7 @@ export default function Dashboard() {
         />
       </main>
 
-      {/* Dialogs */}
+      {/* Dialog Components */}
       <CreateTaskDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}

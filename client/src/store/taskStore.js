@@ -12,6 +12,7 @@ export const useTaskStore = create((set, get) => ({
   },
   filters: {
     priority: "all",
+    status: "all",
     search: "",
     sortBy: "createdAt",
     sortOrder: "desc",
