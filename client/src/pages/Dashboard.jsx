@@ -162,7 +162,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-lg font-bold text-slate-800">
-                  Task Dashboard
+                  Taskflow AI Dashboard
                 </h1>
                 <p className="text-sm text-slate-500">
                   Welcome back, {user?.name}

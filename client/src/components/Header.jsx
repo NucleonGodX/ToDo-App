@@ -5,69 +5,77 @@ import { Button } from "@/components/ui/button";
 
 const Header = () => {
   return (
-    <header className="bg-white border-b border-teal/20 shadow-sm">
+    // Updated header with a clean background and bottom border
+    <header className="bg-white/75 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="p-2 bg-teal/10 rounded-lg">
-              <Brain className="h-6 w-6 text-teal" />
+            {/* Updated logo icon to use the indigo accent color */}
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <Brain className="h-6 w-6 text-indigo-600" />
             </div>
-            <span className="text-xl font-bold text-midnight-blue">
-              TaskAI Manager
+            {/* Updated brand text to use the primary slate color */}
+            <span className="text-xl font-bold text-slate-800">
+              Taskflow AI
             </span>
           </Link>
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center space-x-8">
+            {/* Updated navigation links to use slate and hover with indigo */}
             <Link
               to="/"
-              className="text-midnight-blue/70 hover:text-teal transition-colors"
+              className="text-slate-600 hover:text-indigo-600 transition-colors font-medium"
             >
               Home
             </Link>
             <a
-              href="#features"
-              className="text-midnight-blue/70 hover:text-teal transition-colors"
+              href="/#features"
+              className="text-slate-600 hover:text-indigo-600 transition-colors font-medium"
             >
               Features
             </a>
             <a
-              href="#how-it-works"
-              className="text-midnight-blue/70 hover:text-teal transition-colors"
+              href="/#how-it-works"
+              className="text-slate-600 hover:text-indigo-600 transition-colors font-medium"
             >
               How It Works
             </a>
           </nav>
 
           {/* Auth Buttons */}
-          <div className="flex items-center space-x-3">
+          <div className="hidden md:flex items-center space-x-2">
+            {/* Updated Login button to an outline/secondary style */}
             <Link to="/login">
               <Button
                 variant="ghost"
-                className="text-midnight-blue hover:bg-teal/10"
+                className="text-slate-700 hover:bg-slate-100 hover:text-slate-900"
               >
                 <LogIn className="h-4 w-4 mr-2" />
-                Login
+                Log In
               </Button>
             </Link>
+            {/* Updated Sign Up button to the primary indigo style */}
             <Link to="/signup">
-              <Button className="bg-teal hover:bg-teal/90 text-white">
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
                 <UserPlus className="h-4 w-4 mr-2" />
                 Sign Up
               </Button>
             </Link>
           </div>
 
-          {/* Mobile menu button - you can enhance this later with a mobile menu */}
+          {/* Mobile menu button */}
           <div className="md:hidden">
+            {/* This button can be used to trigger a mobile menu */}
             <Link to="/login">
               <Button
                 variant="ghost"
-                size="sm"
-                className="text-midnight-blue hover:bg-teal/10"
+                size="icon"
+                className="text-slate-700 hover:bg-slate-100 hover:text-slate-900"
               >
-                <LogIn className="h-4 w-4" />
+                <LogIn className="h-5 w-5" />
+                <span className="sr-only">Log In</span>
               </Button>
             </Link>
           </div>

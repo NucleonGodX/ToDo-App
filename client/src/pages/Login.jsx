@@ -47,12 +47,13 @@ export default function Login() {
   } = useForm({
     resolver: zodResolver(loginSchema),
   });
+
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // Additional client-side validations
       if (!data.email.trim() || !data.password.trim()) {
         toast.error("Email and password are required");
+        setLoading(false);
         return;
       }
 
@@ -74,48 +75,43 @@ export default function Login() {
 
   return (
     <PublicLayout>
-      <div className="flex items-center justify-center bg-gradient-to-br from-sage via-sage/90 to-sage/80 p-4 min-h-[calc(100vh-200px)]">
-        <Card className="w-full max-w-md shadow-xl border-2 border-teal/20">
+      <div className="flex items-center justify-center bg-slate-50 p-4 min-h-[calc(100vh-8rem)]">
+        <Card className="w-full max-w-md shadow-md border border-slate-200">
           <CardHeader className="space-y-1 text-center">
             <div className="flex items-center justify-center mb-4">
-              <div className="p-3 bg-teal/10 rounded-full">
-                <LogIn className="h-8 w-8 text-teal" />
+              <div className="p-3 bg-indigo-100 rounded-full">
+                <LogIn className="h-8 w-8 text-indigo-600" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-midnight-blue">
-              Welcome Back
+            <CardTitle className="text-2xl font-bold text-slate-800">
+              Welcome Back!
             </CardTitle>
-            <CardDescription className="text-midnight-blue/70">
-              Sign in to your Natural Language Task Manager
+            <CardDescription className="text-slate-600 pt-1">
+              Ready to tackle your tasks? Let's get you logged in.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-midnight-blue font-medium"
-                >
+                <Label htmlFor="email" className="text-slate-700 font-medium">
                   Email
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
-                  className="border-teal/30 focus:border-teal"
+                  placeholder="name@example.com"
+                  className="border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   {...register("email")}
                 />
                 {errors.email && (
-                  <p className="text-sm text-burgundy">
-                    {errors.email.message}
-                  </p>
+                  <p className="text-sm text-red-600">{errors.email.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label
                   htmlFor="password"
-                  className="text-midnight-blue font-medium"
+                  className="text-slate-700 font-medium"
                 >
                   Password
                 </Label>
@@ -123,14 +119,17 @@ export default function Login() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    className="border-teal/30 focus:border-teal pr-10"
+                    placeholder="••••••••"
+                    className="border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 pr-10"
                     {...register("password")}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-midnight-blue/50 hover:text-midnight-blue"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -140,7 +139,7 @@ export default function Login() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-burgundy">
+                  <p className="text-sm text-red-600">
                     {errors.password.message}
                   </p>
                 )}
@@ -148,21 +147,21 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full bg-teal hover:bg-teal/90 text-white font-medium"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? "Logging In..." : "Log In"}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-midnight-blue/70">
-                Don&apos;t have an account?{" "}
+              <p className="text-sm text-slate-600">
+                New here?{" "}
                 <Link
                   to="/signup"
-                  className="text-teal hover:text-teal/80 font-medium underline underline-offset-4"
+                  className="text-indigo-600 hover:text-indigo-700 font-medium underline underline-offset-4"
                 >
-                  Sign up
+                  Create an account
                 </Link>
               </p>
             </div>

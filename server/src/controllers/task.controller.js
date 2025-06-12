@@ -132,17 +132,7 @@ export const getTasks = async (req, res) => {
   try {
     // Validate query parameters
 
-    console.log("--- NEW REQUEST ---");
-    console.log("Received query params:", req.query);
-
-    const {
-      sortBy,
-      sortOrder,
-      priority,
-      status,
-      page,
-      limit,
-    } = // 🔄 UPDATED to get 'status'
+    const { sortBy, sortOrder, priority, status, page, limit } =
       getTasksQuerySchema.parse(req.query);
 
     // Build filter object
@@ -153,12 +143,9 @@ export const getTasks = async (req, res) => {
       filter.priority = priority;
     }
 
-    // ✨ ADD THIS BLOCK TO HANDLE THE STATUS FILTER
     if (status && status !== "all") {
       filter.status = status;
     }
-
-    console.log("Database filter object:", filter);
 
     // Build sort object
     const sort = {};

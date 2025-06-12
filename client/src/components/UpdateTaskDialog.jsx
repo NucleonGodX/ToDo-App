@@ -56,11 +56,15 @@ export default function UpdateTaskDialog({
       setValue("status", task.status || "todo");
       setValue("assignee", task.assignee || "");
 
-      // Format date for input
+      // Format date for the HTML date input
       if (task.dueDate) {
-        const date = new Date(task.dueDate);
-        const formattedDate = date.toISOString().split("T")[0];
-        setValue("dueDate", formattedDate);
+        try {
+          const date = new Date(task.dueDate);
+          const formattedDate = date.toISOString().split("T")[0];
+          setValue("dueDate", formattedDate);
+        } catch (e) {
+          setValue("dueDate", "");
+        }
       } else {
         setValue("dueDate", "");
       }
@@ -73,34 +77,27 @@ export default function UpdateTaskDialog({
     setIsLoading(true);
 
     const updateData = {
-      taskName: data.taskName,
-      description: data.description || undefined,
-      priority: data.priority,
-      status: data.status,
-      assignee: data.assignee || undefined,
+      ...data,
       dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
     };
 
-    // Remove undefined values
-    Object.keys(updateData).forEach(
-      (key) => updateData[key] === undefined && delete updateData[key]
-    );
+    // Remove empty strings so they don't overwrite existing data
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === "" || updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
 
     try {
       const response = await taskService.updateTask(task._id, updateData);
-
-      // Update with server response
       updateTask(task._id, response.data.task);
-
       toast.success("Task updated successfully!");
       handleClose();
 
-      // Ensure stats are refreshed after successful update
       setTimeout(() => {
         onSuccess();
       }, 100);
     } catch (error) {
-      console.error("Update task error:", error);
       toast.error(error.response?.data?.message || "Failed to update task");
     } finally {
       setIsLoading(false);
@@ -114,60 +111,50 @@ export default function UpdateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-white">
         <DialogHeader>
-          <DialogTitle className="text-midnight-blue">Update Task</DialogTitle>
-          <DialogDescription>
-            Modify the task details below. All fields are optional except task
-            name.
+          <DialogTitle className="text-slate-800">Update Task</DialogTitle>
+          <DialogDescription className="text-slate-500">
+            Modify the details of your existing task.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label
-              htmlFor="taskName"
-              className="text-midnight-blue font-medium"
-            >
+            <Label htmlFor="taskName" className="text-slate-700 font-medium">
               Task Name *
             </Label>
             <Input
               id="taskName"
               placeholder="Enter task name"
-              className="border-teal/30 focus:border-teal"
+              className="border-slate-300 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
               {...register("taskName")}
             />
             {errors.taskName && (
-              <p className="text-sm text-burgundy">{errors.taskName.message}</p>
+              <p className="text-sm text-red-600">{errors.taskName.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label
-              htmlFor="description"
-              className="text-midnight-blue font-medium"
-            >
+            <Label htmlFor="description" className="text-slate-700 font-medium">
               Description
             </Label>
             <Textarea
               id="description"
               placeholder="Enter task description"
-              className="border-teal/30 focus:border-teal min-h-[80px]"
+              className="border-slate-300 min-h-[80px] focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
               {...register("description")}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label
-                htmlFor="priority"
-                className="text-midnight-blue font-medium"
-              >
+              <Label htmlFor="priority" className="text-slate-700 font-medium">
                 Priority
               </Label>
               <select
                 id="priority"
-                className="w-full h-10 px-3 py-2 text-sm border border-teal/30 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-teal/50"
+                className="w-full h-10 px-3 py-2 text-sm border border-slate-300 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 {...register("priority")}
               >
                 <option value="P1">P1 - Critical</option>
@@ -178,15 +165,12 @@ export default function UpdateTaskDialog({
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="status"
-                className="text-midnight-blue font-medium"
-              >
+              <Label htmlFor="status" className="text-slate-700 font-medium">
                 Status
               </Label>
               <select
                 id="status"
-                className="w-full h-10 px-3 py-2 text-sm border border-teal/30 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-teal/50"
+                className="w-full h-10 px-3 py-2 text-sm border border-slate-300 rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 {...register("status")}
               >
                 <option value="todo">To Do</option>
@@ -198,49 +182,43 @@ export default function UpdateTaskDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label
-                htmlFor="dueDate"
-                className="text-midnight-blue font-medium"
-              >
+              <Label htmlFor="dueDate" className="text-slate-700 font-medium">
                 Due Date
               </Label>
               <Input
                 id="dueDate"
                 type="date"
-                className="border-teal/30 focus:border-teal"
+                className="border-slate-300 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
                 {...register("dueDate")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="assignee"
-                className="text-midnight-blue font-medium"
-              >
+              <Label htmlFor="assignee" className="text-slate-700 font-medium">
                 Assignee
               </Label>
               <Input
                 id="assignee"
-                placeholder="Enter assignee name or email"
-                className="border-teal/30 focus:border-teal"
+                placeholder="Enter assignee name"
+                className="border-slate-300 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
                 {...register("assignee")}
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
-              className="border-teal/30 text-midnight-blue"
+              className="text-slate-700 border-slate-300 hover:bg-slate-100"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-teal hover:bg-teal/90 text-white"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               {isLoading ? "Updating..." : "Update Task"}
             </Button>
