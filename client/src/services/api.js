@@ -1,8 +1,14 @@
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+// Properly handle URL concatenation to avoid double slashes
+const getBaseURL = () => {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
+  // Remove trailing slash if it exists, then add /api
+  return `${backendUrl.replace(/\/$/, '')}/api`;
+};
+
+const API_BASE_URL = getBaseURL();
 
 // Create axios instance
 const api = axios.create({

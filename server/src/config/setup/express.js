@@ -47,6 +47,11 @@ export const configureExpress = () => {
     app.use(morgan("dev"));
   }
 
+  // Serve static files in production
+  if (config.nodeEnv === "production") {
+    app.use(express.static(path.join(__dirname, "../../../client/dist")));
+  }
+
   // Mount all API routes
   allRoutes(app);
 
@@ -60,13 +65,35 @@ export const configureExpress = () => {
     });
   });
 
-  // Catch-all route for undefined routes
-  app.use((req, res) => {
+  // Handle client-side routing in production (Express v5 compatible)
+  if (config.nodeEnv === "production") {
+    app.get("/:path*", (req, res, next) => {
+      // Skip API routes
+      if (req.path.startsWith("/api")) {
+        return next();
+      }
+      // Serve React app for all non-API routes
+      res.sendFile(path.join(__dirname, "../../../client/dist/index.html"));
+    });
+  }
+
+  // 404 handler for API routes only
+  app.use("/api/:path*", (req, res) => {
     res.status(404).json({
       success: false,
-      message: `Route not found: ${req.originalUrl}`,
+      message: `API route not found: ${req.originalUrl}`,
     });
   });
+
+  // General 404 handler for development
+  if (config.nodeEnv === "development") {
+    app.use((req, res) => {
+      res.status(404).json({
+        success: false,
+        message: `Route not found: ${req.originalUrl}`,
+      });
+    });
+  }
 
   // Error handling middleware
   app.use((err, req, res, next) => {
